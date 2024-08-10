@@ -5,12 +5,21 @@
 		<LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
 		<PackageId>lib-railway</PackageId>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>Railway Library</Title>
+		<Description>lib-railway is a lightweight .NET library developed to solve a common problem. It returns an object indicating success or failure of an operation instead of throwing/using exceptions. </Description>
+		<PackageProjectUrl></PackageProjectUrl>
+		<PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/SeidrCode/lib-railway</RepositoryUrl>
     </PropertyGroup>
 	
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<None Include="..\ReadMe.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-		<PackageReference Include="Primitives.Lib" Version="1.0.23" />
 	</ItemGroup>
 	
 </Project>

@@ -1,6 +1,4 @@
-﻿using Primitives.Lib.Extensions;
-
-namespace Railway.Lib.Extensions;
+﻿namespace Railway.Lib.Extensions;
 
 public static class ExceptionExtensions
 {

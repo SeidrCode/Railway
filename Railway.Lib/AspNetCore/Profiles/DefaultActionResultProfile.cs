@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Primitives.Lib.CustomObjectResults;
 using Railway.Lib.AspNetCore.Contexts;
 using Railway.Lib.Constants;
@@ -19,12 +20,34 @@ public class DefaultActionResultProfile : IActionResultProfile
 
     public ActionResult TransformToFailureActionResult(ActionResultProfileFailureContext context)
     {
-        var errorType = context.Error.GetErrorTypeFromMetadata();
+        var problemDetails = new ProblemDetails();
 
-        var isBusinessError = errorType == ErrorTypes.BusinessError;
+        var errorType = context.Error.GetErrorTypeFromMetadataOrDefault();
 
-        return isBusinessError
-            ? new BadRequestObjectResult(context.Error.ToString())
-            : new InternalServerErrorObjectResult(context.Error.ToString());
+        problemDetails.Title = errorType switch
+        {
+            ErrorType.BusinessError => "Произошла ошибка бизнес логики.",
+            ErrorType.NotFound => "Запрашиваемые данные не найдены.",
+            ErrorType.SystemError => "Произошла системная ошибка.",
+            _ => throw new NotImplementedException()
+        };
+
+        problemDetails.Status = errorType switch
+        {
+            ErrorType.BusinessError => StatusCodes.Status400BadRequest,
+            ErrorType.NotFound => StatusCodes.Status404NotFound,
+            ErrorType.SystemError => StatusCodes.Status500InternalServerError,
+            _ => throw new NotImplementedException()
+        };
+
+        problemDetails.Extensions.Add("error", context.Error);
+
+        return errorType switch
+        {
+            ErrorType.BusinessError => new BadRequestObjectResult(problemDetails),
+            ErrorType.NotFound => new NotFoundObjectResult(problemDetails),
+            ErrorType.SystemError => new InternalServerErrorObjectResult(problemDetails),
+            _ => throw new NotImplementedException()
+        };
     }
 }

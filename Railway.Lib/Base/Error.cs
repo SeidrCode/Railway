@@ -34,27 +34,20 @@ public record Error
     /// <param name="message">Сообщение об ошибке</param>
     /// <param name="code">Код ошибки</param>
     /// <param name="errorType">Тип ошибки: BusinessError или SystemError</param>
-    public Error(string message, string code, string errorType = null) : this()
+    public Error(string message, string code, ErrorType? errorType = null) : this()
     {
         Message = message;
         Code = code;
 
-        ErrorTypeValidate(errorType);
+        AddErrorType(errorType);
     }
 
-    private void ErrorTypeValidate(string errorType)
+    private void AddErrorType(ErrorType? errorType)
     {
-        if (string.IsNullOrEmpty(errorType))
+        if(errorType == null)
             return;
 
-        if (errorType is ErrorTypes.BusinessError or ErrorTypes.SystemError)
-        {
-            Metadata.Add("ErrorType", errorType);
-        }
-        else
-        {
-            throw new ArgumentException("Некорректный тип ошибки. Допустимые типы: BusinessError или SystemError.");
-        }
+        Metadata.Add("ErrorType", errorType.ToString());
     }
 
     /// <summary>
@@ -103,9 +96,9 @@ public record Error
         return this;
     }
 
-    public Error WithErrorType(string errorType)
+    public Error WithErrorType(ErrorType errorType)
     {
-        ErrorTypeValidate(errorType);
+        AddErrorType(errorType);
         return this;
     }
 
@@ -175,18 +168,18 @@ public record Error
 
     public static readonly Error None = new(string.Empty, string.Empty);
 
-    public static readonly Error NullValue = new("Error.NullValue", "Ошибка. Ожидаемое значение равно null.");
+    public static readonly Error NullValue = new("Error.NullValue", "Ошибка. Ожидаемое значение равно null.", ErrorType.BusinessError);
 
-    public static readonly Error NotFound = new("Error.NotFound", "Ошибка. Ожидаемое значение не найдено.");
+    public static readonly Error NotFound = new("Error.NotFound", "Ошибка. Ожидаемое значение не найдено.", ErrorType.NotFound);
 
     public static implicit operator Result(Error error) => Result.Failure(error);
 
-    public string GetErrorTypeFromMetadata()
+    public ErrorType GetErrorTypeFromMetadataOrDefault()
     {
-        var errorTypeObject = Metadata.Keys.FirstOrDefault(x => x == "ErrorType");
-        return errorTypeObject != null
-            ? Metadata["ErrorType"].ToString()
-            : ErrorTypes.SystemError;
+        if (Metadata.TryGetValue(nameof(ErrorType), out var errorType))
+            return (ErrorType)errorType;
+        
+        return ErrorType.SystemError;
     }
 
     public override string ToString()

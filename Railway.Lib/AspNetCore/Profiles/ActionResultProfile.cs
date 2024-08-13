@@ -51,32 +51,43 @@ public class ActionResultProfile : IActionResultProfile
             problemDetails.Extensions.Add("traceId", traceId);
         }
 
-        var errorType = context.Error.GetErrorTypeFromMetadata();
+        var errorType = context.Error.GetErrorTypeFromMetadataOrDefault();
 
-        var isBusinessError = errorType == ErrorTypes.BusinessError;
-
-        problemDetails.Title = isBusinessError ? "Произошла ошибка бизнес логики." : "Произошла системная ошибка.";
-
-        if (serviceType == "api")
+        problemDetails.Title = errorType switch
         {
-            problemDetails.Extensions.Add("requestId", httpContext.Request.Headers["x-request-id"].ToString());
-            problemDetails.Extensions.Add("systemCode", httpContext.Request.Headers["x-external-system-code"].ToString());
-            problemDetails.Extensions.Add("userCode", httpContext.Request.Headers["x-external-user-code"].ToString());
-            problemDetails.Extensions.Add("version", version);
-            problemDetails.Extensions.Add("method", httpContext.Request.Method);
-            problemDetails.Extensions.Add("url", httpContext.Request.GetDisplayUrl());
+            ErrorType.BusinessError => "Произошла ошибка бизнес логики.",
+            ErrorType.NotFound => "Запрашиваемые данные не найдены.",
+            ErrorType.SystemError => "Произошла системная ошибка.",
+            _ => throw new NotImplementedException()
+        };
 
-            if (httpContext.Request.Path.HasValue)
-                problemDetails.Extensions.Add("endpoint", httpContext.Request.Path.Value);
+        problemDetails.Extensions.Add("requestId", httpContext.Request.Headers["x-request-id"].ToString());
+        problemDetails.Extensions.Add("systemCode", httpContext.Request.Headers["x-external-system-code"].ToString());
+        problemDetails.Extensions.Add("userCode", httpContext.Request.Headers["x-external-user-code"].ToString());
+        problemDetails.Extensions.Add("version", version);
+        problemDetails.Extensions.Add("method", httpContext.Request.Method);
+        problemDetails.Extensions.Add("url", httpContext.Request.GetDisplayUrl());
 
-            problemDetails.Status = isBusinessError ? StatusCodes.Status400BadRequest : StatusCodes.Status500InternalServerError;
-        }
+        if (httpContext.Request.Path.HasValue)
+            problemDetails.Extensions.Add("endpoint", httpContext.Request.Path.Value);
 
+        problemDetails.Status = errorType switch
+        {
+            ErrorType.BusinessError => StatusCodes.Status400BadRequest,
+            ErrorType.NotFound => StatusCodes.Status404NotFound,
+            ErrorType.SystemError => StatusCodes.Status500InternalServerError,
+            _ => throw new NotImplementedException()
+        };
+        
         problemDetails.Extensions.Add("error", context.Error);
 
-        return isBusinessError
-            ? new BadRequestObjectResult(problemDetails)
-            : new InternalServerErrorObjectResult(problemDetails);
+        return errorType switch
+        {
+            ErrorType.BusinessError => new BadRequestObjectResult(problemDetails),
+            ErrorType.NotFound => new NotFoundObjectResult(problemDetails),
+            ErrorType.SystemError => new InternalServerErrorObjectResult(problemDetails),
+            _ => throw new NotImplementedException()
+        };
     }
 
     /// <summary>

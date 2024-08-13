@@ -9,8 +9,6 @@ public class Result<TValue> : Result
 
     protected internal Result(TValue? value, bool isSuccess, Error error) : base(isSuccess, error) => _value = value;
 
-    protected internal Result(TValue? value, bool isSuccess, List<Error> errors) : base(isSuccess, errors) => _value = value;
-
     public TValue Value => IsSuccess ? _value! : throw new InvalidOperationException("Значение недоступно.");
 
     public TValue ValueOrDefault => IsSuccess ? _value! : default;

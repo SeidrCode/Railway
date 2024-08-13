@@ -5,5 +5,5 @@ lib-railway is a lightweight .NET library developed to solve a common problem. I
 
 Вы можете установить [lib-railway из NuGet](https://www.nuget.org/packages/lib-railway)
 
-`dotnet add package lib-railway --version 1.0.0`
+`dotnet add package lib-railway`
 

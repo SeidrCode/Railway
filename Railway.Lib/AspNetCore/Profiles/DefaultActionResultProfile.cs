@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Primitives.Lib.CustomObjectResults;
 using Railway.Lib.AspNetCore.Contexts;
-using Railway.Lib.AspNetCore.CustomObjectResults;
 using Railway.Lib.Constants;
 
 namespace Railway.Lib.AspNetCore.Profiles;
